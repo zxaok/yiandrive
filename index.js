@@ -54,6 +54,20 @@ module.exports = async (req, res) => {
       throw new Error('No redirect location found');
     }
   } catch (error) {
+    if (error.response && error.response.status === 302) {
+      // 如果是 302 错误，获取 Location 头部
+      const finalUrl = error.response.headers.location;
+      console.log(`302 Redirect found for ${videoPath}. Redirecting to: ${finalUrl}`);
+
+      // 缓存新的 URL 和时间戳
+      cache[videoPath] = {
+        url: finalUrl,
+        timestamp: Date.now(),
+      };
+
+      return res.status(200).json({ videoLink: finalUrl });
+    }
+
     console.error('Error fetching video URL:', error.message);
     return res.status(500).json({ error: error.message });
   }
