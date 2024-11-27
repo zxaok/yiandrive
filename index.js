@@ -26,6 +26,10 @@ export default async function handler(req, res) {
       redirect: 'follow', // 确保跟随重定向
       headers: {
         'User-Agent': userAgent,
+        'Accept': 'application/json', // 可选，具体取决于API要求
+        'Authorization': 'Bearer YOUR_TOKEN', // 如果需要 token
+        // 例如，如果你需要 cookie 或其他认证信息，可以在此添加
+        'Cookie': 'your_cookie_data_here',
       },
     });
 
