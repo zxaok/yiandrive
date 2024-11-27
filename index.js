@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 let lastFetchedUrl = null; // 缓存最后的 URL
 let lastFetchTime = 0; // 缓存最后获取的时间
