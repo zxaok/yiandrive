@@ -1,51 +1,50 @@
-import fetch from 'node-fetch';
+const axios = require('axios');
 
-let lastFetchedUrl = null; // 缓存最后的 URL
-let lastFetchTime = 0; // 缓存最后获取的时间
+// 配置 User-Agent
+const headers = {
+  'User-Agent': 'okhttp'
+};
 
-export default async function handler(req, res) {
-  const baseUrl = 'http://dns.yiandrive.com:16813'; // 基本目标 URL
-  const userAgent = 'okhttp'; // 设置 User-Agent 为 okhttp
-
-  // 提取 URL 中的后缀部分（例如 /douyu/122402）
-  const { slug } = req.query;
-  const encodedSlug = slug ? encodeURIComponent(slug) : ''; // 对 slug 进行编码处理
-  const fullUrl = `${baseUrl}${encodedSlug ? `/${encodedSlug}` : ''}`; // 拼接目标 URL
-
+// 获取视频链接的函数
+const fetchVideoUrl = async (videoPath) => {
+  const url = `http://dns.yiandrive.com:16813/${videoPath}`;
+  
   try {
-    const currentTime = Date.now();
-
-    // 如果缓存的时间小于10分钟，直接使用缓存的URL
-    if (lastFetchedUrl && currentTime - lastFetchTime < 10 * 60 * 1000) {
-      console.log('Returning cached URL');
-      return res.redirect(lastFetchedUrl); // 直接重定向到缓存的URL
-    }
-
-    // 发送请求并跟随重定向
-    const response = await fetch(fullUrl, {
-      method: 'GET',
-      redirect: 'follow', // 确保跟随重定向
-      headers: {
-        'User-Agent': userAgent,
-      },
+    // 发起请求，并禁用自动重定向
+    const response = await axios.get(url, {
+      headers,
+      maxRedirects: 0
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    // 如果是 302 重定向，获取视频的最终 URL
+    if (response.status === 302) {
+      return response.headers.location;
     }
 
-    // 获取最终重定向的 URL
-    const finalUrl = response.url;
-
-    // 缓存结果和时间
-    lastFetchedUrl = finalUrl;
-    lastFetchTime = currentTime;
-
-    console.log('Returning new URL');
-    // 直接重定向到最终的 URL，无论是 .m3u8 还是 .flv
-    return res.redirect(finalUrl);
+    throw new Error('No redirect location found');
   } catch (error) {
-    console.error('Error fetching video link:', error);
-    return res.status(500).send('Internal Server Error');
+    console.error('Error fetching video URL:', error.message);
+    throw new Error('Failed to fetch video URL');
   }
-}
+};
+
+// API 路由处理
+module.exports = async (req, res) => {
+  // 从 URL 中提取路径部分（例如 'yy/1355652820' 或 'bilibili/23138275'）
+  const videoPath = req.url.slice(1);  // 获取路径部分（去掉前导的斜杠）
+
+  if (!videoPath) {
+    return res.status(400).send('Missing video path');
+  }
+
+  try {
+    // 获取最终的视频链接
+    const videoUrl = await fetchVideoUrl(videoPath);
+    
+    // 重定向到视频链接
+    res.redirect(videoUrl);
+  } catch (error) {
+    // 出现错误时返回 500 错误
+    res.status(500).send('Error fetching video URL');
+  }
+};
