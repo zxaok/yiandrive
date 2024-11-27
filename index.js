@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
   // 如果缓存存在且未过期，直接返回缓存的 URL
   if (cached && now - cached.timestamp < CACHE_TTL) {
     console.log(`Returning cached URL for ${videoPath}`);
-    return res.status(200).json({ videoLink: cached.url });
+    return res.redirect(cached.url);  // 使用 res.redirect() 进行重定向
   }
 
   // 构造最终请求的 URL
@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
         timestamp: now,
       };
 
-      return res.status(200).json({ videoLink: response.headers.location });
+      return res.redirect(response.headers.location);  // 使用 res.redirect() 进行重定向
     } else {
       throw new Error('No redirect location found');
     }
@@ -65,7 +65,7 @@ module.exports = async (req, res) => {
         timestamp: Date.now(),
       };
 
-      return res.status(200).json({ videoLink: finalUrl });
+      return res.redirect(finalUrl);  // 使用 res.redirect() 进行重定向
     }
 
     console.error('Error fetching video URL:', error.message);
