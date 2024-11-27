@@ -3,14 +3,14 @@ import fetch from 'node-fetch';
 let lastFetchedUrl = null; // 缓存最后的 URL
 let lastFetchTime = 0; // 缓存最后获取的时间
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   const baseUrl = 'http://dns.yiandrive.com:16813'; // 基本目标 URL
   const userAgent = 'okhttp'; // 设置 User-Agent 为 okhttp
 
   // 提取 URL 中的后缀部分（例如 /douyu/122402）
   const { slug } = req.query;
   const fullUrl = `${baseUrl}${slug ? `/${slug}` : ''}`; // 拼接目标 URL
-  
+
   try {
     const currentTime = Date.now();
 
@@ -47,4 +47,4 @@ module.exports = async (req, res) => {
     console.error('Error fetching video link:', error);
     return res.status(500).send('Internal Server Error');
   }
-};
+}
