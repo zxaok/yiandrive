@@ -1,10 +1,21 @@
 const fetch = require('node-fetch');
 
+let lastFetchedUrl = null; // 缓存最后的 URL
+let lastFetchTime = 0; // 缓存最后获取的时间
+
 module.exports = async (req, res) => {
   const url = 'http://dns.yiandrive.com:16813/yy/1355652820';
   const userAgent = 'okhttp'; // 设置 User-Agent 为 okhttp
 
   try {
+    const currentTime = Date.now();
+
+    // 如果缓存的时间小于10分钟，直接使用缓存的URL
+    if (lastFetchedUrl && currentTime - lastFetchTime < 10 * 60 * 1000) {
+      console.log('Returning cached URL');
+      return res.redirect(lastFetchedUrl); // 直接重定向到缓存的URL
+    }
+
     // 发送请求并跟随重定向
     const response = await fetch(url, {
       method: 'GET',
@@ -21,6 +32,11 @@ module.exports = async (req, res) => {
     // 获取最终重定向的 URL
     const finalUrl = response.url;
 
+    // 缓存结果和时间
+    lastFetchedUrl = finalUrl;
+    lastFetchTime = currentTime;
+
+    console.log('Returning new URL');
     // 直接重定向到最终的 URL，无论是 .m3u8 还是 .flv
     return res.redirect(finalUrl);
   } catch (error) {
