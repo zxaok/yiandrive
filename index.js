@@ -19,11 +19,12 @@ const fetchVideoUrl = async (videoPath) => {
     // 发起请求，并禁用自动重定向
     const response = await axios.get(url, {
       headers,
-      maxRedirects: 0
+      maxRedirects: 0  // 禁用自动重定向
     });
 
     // 如果是 302 重定向，获取视频的最终 URL
     if (response.status === 302) {
+      console.log(`302 Redirect found for ${videoPath}. Redirecting to: ${response.headers.location}`);
       return response.headers.location;
     }
 
