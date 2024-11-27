@@ -1,11 +1,15 @@
 {
-  "name": "fetch-video-link",
+  "name": "vercel-fetch-url",
   "version": "1.0.0",
+  "description": "A simple Vercel function to fetch and redirect URLs",
   "main": "index.js",
-  "license": "MIT",
-  "type": "module", 
+  "scripts": {
+    "start": "vercel dev"
+  },
   "dependencies": {
-    "node-fetch": "^3.2.1",
-    "p-limit": "^3.1.0"
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
