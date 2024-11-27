@@ -1,44 +1,48 @@
 const fetch = require('node-fetch');
+const NodeCache = require('node-cache');
+const pLimit = require('p-limit');
 
-let lastFetchedUrl = null; // 缓存最后的 URL
-let lastFetchTime = 0; // 缓存最后获取的时间
+// 缓存配置：设置缓存时间为600秒（10分钟）
+const myCache = new NodeCache({ stdTTL: 600 }); 
+const limit = pLimit(5); // 限制并发请求数为5
 
 module.exports = async (req, res) => {
-  const url = 'http://dns.yiandrive.com:16813/yy/1355652820';
+  const slug = req.params.slug;  // 获取请求的后缀部分（例如 "douyu/122402"）
+  const cacheKey = `video:${slug}`;  // 使用请求的路径作为缓存键
+
+  // 检查缓存中是否存在结果
+  const cachedUrl = myCache.get(cacheKey);
+  if (cachedUrl) {
+    console.log('Using cached URL');
+    return res.redirect(cachedUrl); // 如果缓存中有结果，直接重定向
+  }
+
+  const url = `http://dns.yiandrive.com:16813/${slug}`;
   const userAgent = 'okhttp'; // 设置 User-Agent 为 okhttp
 
   try {
-    const currentTime = Date.now();
+    // 使用 limit 对请求进行并发控制
+    const response = await limit(async () => {
+      const apiResponse = await fetch(url, {
+        method: 'GET',
+        redirect: 'follow',
+        headers: { 'User-Agent': userAgent },
+      });
 
-    // 如果缓存的时间小于10分钟，直接使用缓存的URL
-    if (lastFetchedUrl && currentTime - lastFetchTime < 10 * 60 * 1000) {
-      console.log('Returning cached URL');
-      return res.redirect(lastFetchedUrl); // 直接重定向到缓存的URL
-    }
+      if (!apiResponse.ok) {
+        throw new Error(`HTTP error! Status: ${apiResponse.status}`);
+      }
 
-    // 发送请求并跟随重定向
-    const response = await fetch(url, {
-      method: 'GET',
-      redirect: 'follow', // 确保跟随重定向
-      headers: {
-        'User-Agent': userAgent,
-      },
+      // 获取最终的重定向 URL
+      const finalUrl = apiResponse.url;
+      
+      // 将结果缓存10分钟
+      myCache.set(cacheKey, finalUrl);
+      return finalUrl;
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    // 获取最终重定向的 URL
-    const finalUrl = response.url;
-
-    // 缓存结果和时间
-    lastFetchedUrl = finalUrl;
-    lastFetchTime = currentTime;
-
-    console.log('Returning new URL');
-    // 直接重定向到最终的 URL，无论是 .m3u8 还是 .flv
-    return res.redirect(finalUrl);
+    // 返回最终的重定向链接
+    return res.redirect(response);
   } catch (error) {
     console.error('Error fetching video link:', error);
     return res.status(500).send('Internal Server Error');
