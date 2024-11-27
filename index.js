@@ -3,13 +3,14 @@ import fetch from 'node-fetch';
 let lastFetchedUrl = null; // 缓存最后的 URL
 let lastFetchTime = 0; // 缓存最后获取的时间
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   const baseUrl = 'http://dns.yiandrive.com:16813'; // 基本目标 URL
-  const userAgent = 'okhttp/3.15'; // 设置 User-Agent 为 okhttp
+  const userAgent = 'okhttp'; // 设置 User-Agent 为 okhttp
 
   // 提取 URL 中的后缀部分（例如 /douyu/122402）
   const { slug } = req.query;
-  const fullUrl = `${baseUrl}${slug ? `/${slug}` : ''}`; // 拼接目标 URL
+  const encodedSlug = slug ? encodeURIComponent(slug) : ''; // 对 slug 进行编码处理
+  const fullUrl = `${baseUrl}${encodedSlug ? `/${encodedSlug}` : ''}`; // 拼接目标 URL
 
   try {
     const currentTime = Date.now();
@@ -26,10 +27,6 @@ export default async function handler(req, res) {
       redirect: 'follow', // 确保跟随重定向
       headers: {
         'User-Agent': userAgent,
-        'Accept': 'application/json', // 可选，具体取决于API要求
-        'Authorization': 'Bearer YOUR_TOKEN', // 如果需要 token
-        // 例如，如果你需要 cookie 或其他认证信息，可以在此添加
-        'Cookie': 'your_cookie_data_here',
       },
     });
 
@@ -51,4 +48,4 @@ export default async function handler(req, res) {
     console.error('Error fetching video link:', error);
     return res.status(500).send('Internal Server Error');
   }
-}
+};
