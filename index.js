@@ -5,6 +5,12 @@ const headers = {
   'User-Agent': 'okhttp'
 };
 
+// 缓存对象，用于存储 URL 和缓存时间
+const cache = {};
+
+// 缓存有效期（单位：毫秒），这里设置为 10 分钟
+const CACHE_TTL = 10 * 60 * 1000;
+
 // 获取视频链接的函数
 const fetchVideoUrl = async (videoPath) => {
   const url = `http://dns.yiandrive.com:16813/${videoPath}`;
@@ -37,9 +43,25 @@ module.exports = async (req, res) => {
     return res.status(400).send('Missing video path');
   }
 
+  // 检查缓存
+  const now = Date.now();
+  const cached = cache[videoPath];
+
+  // 如果缓存存在且未过期，直接返回缓存的 URL
+  if (cached && now - cached.timestamp < CACHE_TTL) {
+    console.log('Returning cached URL for', videoPath);
+    return res.redirect(cached.url);  // 返回缓存的重定向 URL
+  }
+
   try {
     // 获取最终的视频链接
     const videoUrl = await fetchVideoUrl(videoPath);
+
+    // 缓存新的 URL 和时间戳
+    cache[videoPath] = {
+      url: videoUrl,
+      timestamp: now
+    };
     
     // 重定向到视频链接
     res.redirect(videoUrl);
