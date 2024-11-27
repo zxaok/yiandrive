@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 let lastFetchedUrl = null; // 缓存最后的 URL
 let lastFetchTime = 0; // 缓存最后获取的时间
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   const baseUrl = 'http://dns.yiandrive.com:16813'; // 基本目标 URL
   const userAgent = 'okhttp'; // 设置 User-Agent 为 okhttp
 
@@ -48,4 +48,4 @@ module.exports = async (req, res) => {
     console.error('Error fetching video link:', error);
     return res.status(500).send('Internal Server Error');
   }
-};
+}
