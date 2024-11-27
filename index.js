@@ -21,9 +21,10 @@ module.exports = async (req, res) => {
     // 获取最终重定向的 URL
     const finalUrl = response.url;
 
-    return res.status(200).json({ videoLink: finalUrl });
+    // 直接返回最终的 URL
+    return res.status(200).send(finalUrl);
   } catch (error) {
     console.error('Error fetching video link:', error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).send('Internal Server Error');
   }
 };
