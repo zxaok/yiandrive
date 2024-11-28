@@ -43,3 +43,12 @@ module.exports = async (req, res) => {
     if (error.response && error.response.status === 302 && error.response.headers.location) {
       const finalUrl = error.response.headers.location;
       console.log(`302 Redirect found for ${videoPath}. Redirecting to: ${finalUrl}`);
+
+      cache.set(videoPath, finalUrl);
+
+      return res.redirect(finalUrl);  
+    }
+
+    return res.status(500).json({ error: error.message });
+  }
+};
