@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
     const response = await axios.get(url, {
       headers: { 'User-Agent': userAgent },
       maxRedirects: 0,  
-      timeout: 8000,  
+      timeout: 5000,  
     });
 
     if (response.status === 302 && response.headers.location) {
