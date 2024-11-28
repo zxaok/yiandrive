@@ -1,7 +1,14 @@
 const axios = require('axios');
-const NodeCache = require('node-cache');  
+const LRU = require('lru-cache');
+const pLimit = require('p-limit');
 
-const cache = new NodeCache({ stdTTL: 600, checkperiod: 120, maxKeys: 1000 });
+const cache = new LRU({
+  max: 1000,
+  maxSize: 30 * 1024 * 1024,  
+  ttl: 10 * 60 * 1000,  
+});
+
+const limit = pLimit(5);  
 
 module.exports = async (req, res) => {
   const videoPath = req.url.slice(1);  
@@ -10,39 +17,33 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'Missing video path' });
   }
 
-  const cachedUrl = cache.get(videoPath);
-  if (cachedUrl) {
-    console.log(`Returning cached URL for ${videoPath}`);
-    return res.redirect(cachedUrl);  
+  const cached = cache.get(videoPath);  
+
+  if (cached) {
+    return res.redirect(cached);  
   }
 
   const url = `http://dns.yiandrive.com:16813/${videoPath}`;
   const userAgent = 'okhttp';  
 
   try {
-    console.log(`Fetching URL: ${url}`);
-
-    const response = await axios.get(url, {
+    const response = await limit(() => axios.get(url, {
       headers: { 'User-Agent': userAgent },
       maxRedirects: 0,  
-      timeout: 8000,  
-    });
+    }));
 
     if (response.status === 302 && response.headers.location) {
-      console.log(`302 Redirect found for ${videoPath}. Redirecting to: ${response.headers.location}`);
+      const finalUrl = response.headers.location;
 
-      cache.set(videoPath, response.headers.location);
+      cache.set(videoPath, finalUrl);
 
-      return res.redirect(response.headers.location);  
+      return res.redirect(finalUrl);  
     } else {
-      throw new Error('No redirect location found');
+      return res.status(500).json({ error: 'No redirect location found' });
     }
   } catch (error) {
-    console.error('Error fetching video URL:', error.message);
-
-    if (error.response && error.response.status === 302 && error.response.headers.location) {
+    if (error.response && error.response.status === 302) {
       const finalUrl = error.response.headers.location;
-      console.log(`302 Redirect found for ${videoPath}. Redirecting to: ${finalUrl}`);
 
       cache.set(videoPath, finalUrl);
 
