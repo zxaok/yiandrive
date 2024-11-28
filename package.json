@@ -1,14 +1,17 @@
 {
-  "name": "your-vercel-project",
+  "name": "video-redirector",
   "version": "1.0.0",
+  "description": "A service to redirect video links with caching",
   "main": "index.js",
   "scripts": {
-    "dev": "vercel dev",
-    "build": "vercel build",
-    "start": "vercel start"
+    "dev": "vercel dev",  
+    "start": "vercel --prod" 
   },
   "dependencies": {
-    "axios": "^0.27.2",
-    "lru-cache": "^7.13.0"
+    "axios": "^1.5.0",  
+    "node-cache": "^5.1.2"  
+  },
+  "engines": {
+    "node": "16.x"  
   }
 }
