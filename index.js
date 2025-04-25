@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
     return res.redirect(cachedUrl);  
   }
 
-  const url = `http://dns.yiandrive.com:15907/${videoPath}`;
+  const url = `https://live.iill.top/${videoPath}`;
   const userAgent = 'okhttp';  
 
   try {
