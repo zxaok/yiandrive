@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
   }
 
   const url = `https://live.iill.top/${videoPath}`;
-  const userAgent = 'okhttp';  
+  const userAgent = 'okhttp/3.8.1';  
 
   try {
     console.log(`Fetching URL: ${url}`);
