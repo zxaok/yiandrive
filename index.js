@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
     return res.redirect(cachedUrl);  
   }
 
-  const url = `https://live.iill.top/${videoPath}`;
+  const url = `http://cn.yycx.eu.org:12838/${videoPath}`;
   const userAgent = 'okhttp/3.8.1';  
 
   try {
