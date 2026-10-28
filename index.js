@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
     return res.redirect(cachedUrl);  
   }
 
-  const url = `https://cdn.ttvb.eu.org/${videoPath}`;
+  const url = `https://live.yang-1989.eu.org/${videoPath}`;
   const userAgent = 'okhttp/3.8.1';  
 
   try {
